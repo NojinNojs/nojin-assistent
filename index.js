@@ -9,6 +9,7 @@ const {
 const { config } = require('dotenv');
 const fs = require('fs');
 const path = require('path');
+const { loadChatHistory, saveChatHistory } = require('./handlers/chatHistory');
 
 // Load environment variables
 config();
@@ -30,6 +31,8 @@ client.slashCommands = new Collection();
 client.buttons = new Collection();
 client.modals = new Collection();
 client.selectMenus = new Collection();
+client.chatMemory = loadChatHistory();
+client.activeSessions = new Set(Object.keys(client.chatMemory));
 
 // Load command and event handlers
 const loadHandler = async (handler) => {
@@ -136,3 +139,16 @@ const init = async () => {
 init();
 
 console.log('Bot is running...');
+
+// Save chat history on exit
+process.on('exit', () => {
+  saveChatHistory(client.chatMemory);
+});
+
+process.on('SIGINT', () => {
+  process.exit();
+});
+
+process.on('SIGTERM', () => {
+  process.exit();
+});
